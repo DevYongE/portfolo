@@ -63,18 +63,19 @@ export const profile = {
   // TODO: [채워주세요] 한 줄 정체성 확정 — 추천안 사용 중. 다른 문구로 바꿀지 결정.
   identity: "모바일과 웹을 혼자 다 만드는 1인 풀스택 개발자",
   heroSub:
-    "앱은 Flutter, 웹은 Next.js, 뒷단은 Supabase로 만듭니다. 기획부터 출시까지 직접 합니다.",
+    "앱은 Flutter, 웹은 Next.js, 백엔드는 FastAPI·Supabase로 만듭니다. 기획부터 출시까지 직접 합니다.",
 
   // ── About ──────────────────────────────────────────────
   about: [
-    "앱과 웹을 혼자 처음부터 끝까지 만듭니다. 모바일 앱은 Flutter로, 웹은 Next.js로 짜고 데이터와 로그인은 Supabase로 붙입니다. 화면 디자인, 백엔드, 스토어 출시까지 혼자 합니다.",
-    "“따뜻한 기록을 남깁니다.” OnMemoryLabs라는 이름으로 이런 마음을 담아 서비스를 만듭니다. 하루를 적는 온기록, 읽은 책을 모으는 온서재가 그렇게 나왔습니다. 만들면서 배우고 출시한 뒤에 다듬는 편입니다.",
+    "Flutter로 모바일 앱을, Next.js로 웹을 만들고, 백엔드는 FastAPI와 Supabase로 직접 설계합니다. TourAPI 같은 외부 데이터와 AI 호출을 FastAPI 한 곳으로 모으고, Supabase(DB·인증·스토리지)에 연결하는 구조를 선호합니다.",
+    "OpenAI·Claude 같은 LLM 연동, RevenueCat·AdMob 수익화, Kotlin 네이티브(블루투스 HID)까지 필요한 영역은 직접 다룹니다. 기획·UI 디자인·백엔드·Play 스토어 출시와 운영까지 한 사람이 끝까지 책임지는 것이 강점입니다.",
+    "온기록·온서재·KeyDeck을 직접 출시했고, 2026 관광데이터 활용 공모전 출품작 ‘다시로컬’을 비롯해 멀티플랫폼 서비스를 이어서 만들고 있습니다. “따뜻한 기록을 남깁니다.” OnMemoryLabs라는 이름으로 그 마음을 담아, 빠르게 만들어 출시한 뒤 사용자 반응을 보며 다듬습니다.",
   ],
   facts: [
     { label: "소속", value: "OnMemoryLabs (온메모리랩스)" },
     {
       label: "분야",
-      value: "모바일(Flutter) · 웹(Next.js) · 백엔드(Supabase/FastAPI)",
+      value: "모바일(Flutter) · 웹(Next.js) · 백엔드(FastAPI · Supabase)",
     },
     {
       label: "상태",

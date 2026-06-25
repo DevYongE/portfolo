@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/*
+  포트폴리오 디자인 토큰 (designer_spec 팔레트 그대로 반영)
+  - 라이트: 웜화이트 배경 + 앰버700 강조
+  - 다크: stone900 배경 + 앰버400 강조
+  다크모드는 <html class="dark"> 토글(클래스 전략).
+*/
+
+/* dark variant: 명시적 .dark 클래스 OR (시스템 다크 AND .light 미지정).
+   → 스크립트 없이 첫 페인트부터 시스템 설정을 따르고, 토글 시 클래스로 override. */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
+
+:root {
+  --color-bg: #fffbf5; /* 웜화이트 */
+  --color-surface: #ffffff;
+  --color-text: #1c1917; /* stone900 */
+  --color-muted: #57534e; /* stone600 */
+  --color-primary: #b45309; /* 앰버700 */
+  --color-on-primary: #ffffff; /* primary 배경 위 전경 — 라이트: 흰색(대비 OK) */
+  --color-accent: #2563eb; /* link blue */
+  --color-border: #efe7dd; /* 웜 보더 */
+  --color-destructive: #dc2626;
+}
+
+/* 다크 토큰 (stone900 + 앰버400). 명시적 .dark, 또는 시스템 다크(.light 미지정) 양쪽에서 동일 적용. */
+.dark,
+:root:where(:not(.light)) {
+  --dark-bg: #1c1917; /* stone900 */
+  --dark-surface: #292524; /* stone800 */
+  --dark-text: #fafaf9; /* stone50 */
+  --dark-muted: #a8a29e; /* stone400 */
+  --dark-primary: #fbbf24; /* 앰버400 */
+  --dark-on-primary: #1c1917; /* 앰버400 위 흰 글자는 대비 미달 → 어두운 전경(stone900)으로 AA 확보 */
+  --dark-accent: #60a5fa; /* link blue 라이트 */
+  --dark-border: #3f3a36;
+}
+
+/* 명시적 .dark 클래스: 시스템 설정과 무관하게 다크 강제 */
+.dark {
+  --color-bg: var(--dark-bg);
+  --color-surface: var(--dark-surface);
+  --color-text: var(--dark-text);
+  --color-muted: var(--dark-muted);
+  --color-primary: var(--dark-primary);
+  --color-on-primary: var(--dark-on-primary);
+  --color-accent: var(--dark-accent);
+  --color-border: var(--dark-border);
+}
+
+/* 시스템 다크 + 사용자가 .light를 고르지 않았으면 다크 토큰 적용 (무스크립트 no-flash) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --color-bg: var(--dark-bg);
+    --color-surface: var(--dark-surface);
+    --color-text: var(--dark-text);
+    --color-muted: var(--dark-muted);
+    --color-primary: var(--dark-primary);
+    --color-on-primary: var(--dark-on-primary);
+    --color-accent: var(--dark-accent);
+    --color-border: var(--dark-border);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-muted: var(--color-muted);
+  --color-primary: var(--color-primary);
+  --color-on-primary: var(--color-on-primary);
+  --color-accent: var(--color-accent);
+  --color-border: var(--color-border);
+  --color-destructive: var(--color-destructive);
+
+  --font-sans: var(--font-noto-sans-kr), var(--font-outfit), system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-noto-sans-kr), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 진입 애니메이션: 페이드 + 업 (Intersection Observer가 .is-visible를 붙임) */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.3s ease-out,
+    transform 0.3s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 가로 스와이프 카루셀 — scroll-snap + 스크롤바 숨김(키보드/스와이프는 동작) */
+.snap-x {
+  /* proximity: 프로그램 스크롤(scrollBy smooth)·드래그 해제와 충돌 없이 부드럽게, 가까울 때만 가볍게 스냅 */
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch; /* iOS 관성 스크롤 */
+  scrollbar-width: none; /* Firefox */
+}
+.snap-x::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+.snap-item {
+  scroll-snap-align: start;
+}
+
+/* 드래그-투-스크롤: 평소 grab, 끄는 동안 grabbing(컴포넌트가 .is-dragging 토글) */
+.drag-scroll {
+  cursor: grab;
+}
+.drag-scroll.is-dragging {
+  cursor: grabbing;
+  user-select: none; /* 드래그 중 텍스트/이미지 선택 방지 */
+  scroll-snap-type: none; /* 드래그 중엔 스냅 끔 → 커서를 1:1로 따라와 부드러움 */
+}
+
+/* 모션 최소화 선호 시 애니메이션·스크롤 효과 제거 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

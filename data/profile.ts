@@ -116,8 +116,33 @@ export const profile = {
       ],
       packageId: "",
       playStoreUrl: "",
-      screenshots: [],
-      links: [],
+      screenshots: [
+        {
+          src: "/projects/dasi-local/web_1_home.png",
+          alt: "다시로컬 홈 — ‘데이터로 다시 발견하는 우리 동네, 로컬 여행’. 전국 89곳 숨은 여행지를 AI로 큐레이션",
+          width: 1440,
+          height: 900,
+        },
+        {
+          src: "/projects/dasi-local/web_2_map.png",
+          alt: "다시로컬 지도 탐색 — 지역·반려동물 동반 여부로 필터링해 관광지를 지도(Leaflet)에서 둘러보기",
+          width: 1440,
+          height: 900,
+        },
+        {
+          src: "/projects/dasi-local/web_3_planner.png",
+          alt: "다시로컬 AI 여행 플래너 — 여행 스타일·동행·반려동물을 고르면 AI가 DAY별 동선과 다일정 코스를 설계",
+          width: 1440,
+          height: 900,
+        },
+      ],
+      links: [
+        {
+          label: "사이트 보기",
+          href: "https://dasi-local.vercel.app",
+          external: true,
+        },
+      ],
     },
     {
       slug: "ongirok",
@@ -184,8 +209,8 @@ export const profile = {
     {
       slug: "onseojae",
       name: "온서재 (OnLibrary)",
-      badge: "모바일 · SNS",
-      tagline: "읽은 책과 문장을 모으는 독서 기록 SNS",
+      badge: "모바일 · 웹 · SNS",
+      tagline: "읽은 책과 문장을 모으는 독서 기록 SNS — 모바일 앱과 웹을 함께 운영",
       features: [
         "바코드 도서 등록",
         "문장 수집",
@@ -195,7 +220,7 @@ export const profile = {
         "인앱 구독",
       ],
       stack: ["Flutter(Riverpod)", "FastAPI", "Next.js", "Supabase (모노레포)"],
-      status: "v1.1.1 · Play 스토어 출시",
+      status: "v1.1.1 · Play 스토어 출시 · 웹 서비스 운영",
       packageId: "com.onseojae.app",
       playStoreUrl: "https://play.google.com/store/apps/details?id=com.onseojae.app",
       screenshots: [
@@ -249,6 +274,11 @@ export const profile = {
         },
       ],
       links: [
+        {
+          label: "웹 서비스",
+          href: "https://onlibrary-web.vercel.app",
+          external: true,
+        },
         {
           label: "GitHub",
           href: "https://github.com/onmemorylabs/onlibrary_app",

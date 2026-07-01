@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import CarouselArrow from "./CarouselArrow";
 import { useDragScroll } from "./useDragScroll";
 import type { Screenshot } from "@/data/profile";
@@ -11,6 +12,8 @@ import type { Screenshot } from "@/data/profile";
  * - 1장: 단순 이미지(화살표·점 없음).
  * - 여러 장: 가로 scroll-snap 갤러리 + 마우스 드래그/터치 스와이프 + 작은 원형 화살표 + 하단 점 인디케이터.
  * 점은 현재 보이는 장을 강조하고, 클릭 시 해당 이미지로 스크롤.
+ * - 썸네일 클릭: 원본을 네이티브 <dialog> 라이트박스로 크게 열기(ESC·바깥 클릭 닫기).
+ *   드래그(6px 초과) 직후의 click은 useDragScroll이 1회 막으므로 스와이프와 안 엉킨다.
  */
 export default function ScreenshotGallery({
   shots,
@@ -24,6 +27,17 @@ export default function ScreenshotGallery({
   const [active, setActive] = useState(0);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
+
+  // 라이트박스(원본 크게 보기) — 열린 이미지 인덱스, null이면 닫힘.
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [zoom, setZoom] = useState<number | null>(null);
+  const openZoom = useCallback((i: number) => {
+    setZoom(i);
+    dialogRef.current?.showModal();
+  }, []);
+  const closeZoom = useCallback(() => {
+    dialogRef.current?.close();
+  }, []);
 
   // 스크롤 위치 기준으로 점 강조 + 화살표 활성/비활성 갱신.
   // (반올림 인덱스가 아니라 실제 scrollLeft를 봐야 부분 너비 아이템에서도 끝까지 정확.)
@@ -74,21 +88,65 @@ export default function ScreenshotGallery({
 
   if (shots.length === 0) return null;
 
-  // 한 장: 갤러리 없이 이미지만
+  // 원본 크게 보기 라이트박스 — 네이티브 <dialog>(ESC 닫기 기본), 바깥(백드롭) 클릭 시 닫기.
+  const lightbox = (
+    <dialog
+      ref={dialogRef}
+      onClose={() => setZoom(null)}
+      onClick={(e) => {
+        if (e.target === dialogRef.current) closeZoom(); // 백드롭 클릭만 닫기
+      }}
+      className="m-auto max-h-none max-w-none bg-transparent p-0 backdrop:bg-black/80"
+      aria-label={`${projectName} 스크린샷 크게 보기`}
+    >
+      {zoom !== null ? (
+        <div className="relative">
+          <button
+            type="button"
+            onClick={closeZoom}
+            aria-label="닫기"
+            className="absolute -top-3 -right-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-surface text-text shadow-lg ring-1 ring-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <Image
+            src={shots[zoom].src}
+            alt={shots[zoom].alt}
+            width={shots[zoom].width}
+            height={shots[zoom].height}
+            sizes="92vw"
+            className="h-auto max-h-[90vh] w-auto max-w-[92vw] rounded-xl object-contain"
+            priority
+            draggable={false}
+          />
+        </div>
+      ) : null}
+    </dialog>
+  );
+
+  // 한 장: 갤러리 없이 이미지만 (클릭 시 크게 보기)
   if (shots.length === 1) {
     const s = shots[0];
     return (
-      <div className="overflow-hidden rounded-xl border border-border bg-bg">
-        <Image
-          src={s.src}
-          alt={s.alt}
-          width={s.width}
-          height={s.height}
-          sizes="(max-width: 640px) 90vw, 480px"
-          className="h-auto w-full object-cover"
-          draggable={false}
-        />
-      </div>
+      <>
+        <button
+          type="button"
+          onClick={() => openZoom(0)}
+          aria-label={`${s.alt} — 크게 보기`}
+          className="block w-full cursor-zoom-in overflow-hidden rounded-xl border border-border bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <Image
+            src={s.src}
+            alt={s.alt}
+            width={s.width}
+            height={s.height}
+            sizes="(max-width: 640px) 90vw, 480px"
+            className="pointer-events-none h-auto w-full object-cover"
+            draggable={false}
+          />
+        </button>
+        {lightbox}
+      </>
     );
   }
 
@@ -102,9 +160,12 @@ export default function ScreenshotGallery({
         aria-label={`${projectName} 스크린샷 갤러리 (가로로 스와이프)`}
       >
         {shots.map((s, i) => (
-          <div
+          <button
             key={s.src}
-            className="snap-item w-[44%] shrink-0 overflow-hidden rounded-xl border border-border bg-bg sm:w-[38%]"
+            type="button"
+            onClick={() => openZoom(i)}
+            aria-label={`${s.alt} — 크게 보기`}
+            className="snap-item w-[44%] shrink-0 cursor-zoom-in overflow-hidden rounded-xl border border-border bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-[38%]"
           >
             <Image
               src={s.src}
@@ -112,11 +173,11 @@ export default function ScreenshotGallery({
               width={s.width}
               height={s.height}
               sizes="(max-width: 640px) 44vw, 200px"
-              className="h-auto w-full object-cover"
+              className="pointer-events-none h-auto w-full object-cover"
               loading={i === 0 ? "eager" : "lazy"}
               draggable={false}
             />
-          </div>
+          </button>
         ))}
       </div>
 
@@ -160,6 +221,8 @@ export default function ScreenshotGallery({
           />
         ))}
       </div>
+
+      {lightbox}
     </div>
   );
 }

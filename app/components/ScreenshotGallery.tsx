@@ -38,6 +38,15 @@ export default function ScreenshotGallery({
   const closeZoom = useCallback(() => {
     dialogRef.current?.close();
   }, []);
+  // 라이트박스 안 좌우 이동(화살표·키보드·스와이프). 양끝에서 멈춤(clamp).
+  const touchX = useRef<number | null>(null);
+  const step = useCallback(
+    (dir: 1 | -1) =>
+      setZoom((z) =>
+        z === null ? z : Math.max(0, Math.min(shots.length - 1, z + dir)),
+      ),
+    [shots.length],
+  );
 
   // 스크롤 위치 기준으로 점 강조 + 화살표 활성/비활성 갱신.
   // (반올림 인덱스가 아니라 실제 scrollLeft를 봐야 부분 너비 아이템에서도 끝까지 정확.)
@@ -86,26 +95,65 @@ export default function ScreenshotGallery({
     el.scrollTo({ left: idx * step, behavior: reduce ? "auto" : "smooth" });
   }, []);
 
+  // 원본 크게 보기 라이트박스 — 네이티브 <dialog>(ESC 닫기 기본), 바깥(백드롭) 클릭 시 닫기.
+  const hasMany = shots.length > 1;
+  // 라이트박스가 열린 동안 배경(body) 스크롤 잠금 → "스크롤 없이" 한 화면에 고정.
+  useEffect(() => {
+    if (zoom === null) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [zoom]);
+
+  // 키보드 ←/→ 이동 — dialog 포커스에 의존하지 않게 window에 직접 건다(Esc 닫기는 <dialog> 기본).
+  useEffect(() => {
+    if (zoom === null || !hasMany) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        step(1);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        step(-1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoom, hasMany, step]);
+
   if (shots.length === 0) return null;
 
-  // 원본 크게 보기 라이트박스 — 네이티브 <dialog>(ESC 닫기 기본), 바깥(백드롭) 클릭 시 닫기.
+  // 전체화면 라이트박스 — 이미지는 object-contain으로 항상 화면 안에 맞춰 넘침(스크롤) 없음.
   const lightbox = (
     <dialog
       ref={dialogRef}
       onClose={() => setZoom(null)}
-      onClick={(e) => {
-        if (e.target === dialogRef.current) closeZoom(); // 백드롭 클릭만 닫기
-      }}
-      className="m-auto max-h-none max-w-none bg-transparent p-0 backdrop:bg-black/80"
+      className="fixed inset-0 m-0 h-screen max-h-screen w-screen max-w-none overflow-hidden bg-black/90 p-0 backdrop:bg-black/90"
       aria-label={`${projectName} 스크린샷 크게 보기`}
     >
       {zoom !== null ? (
-        <div className="relative">
+        <div
+          className="relative flex h-full w-full items-center justify-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeZoom(); // 이미지 바깥 클릭 시 닫기
+          }}
+          onTouchStart={(e) => {
+            touchX.current = e.changedTouches[0].clientX;
+          }}
+          onTouchEnd={(e) => {
+            if (touchX.current === null) return;
+            const dx = e.changedTouches[0].clientX - touchX.current;
+            touchX.current = null;
+            if (hasMany && Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+          }}
+        >
           <button
             type="button"
             onClick={closeZoom}
             aria-label="닫기"
-            className="absolute -top-3 -right-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-surface text-text shadow-lg ring-1 ring-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="absolute top-4 right-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-surface text-text shadow-lg ring-1 ring-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -114,11 +162,34 @@ export default function ScreenshotGallery({
             alt={shots[zoom].alt}
             width={shots[zoom].width}
             height={shots[zoom].height}
-            sizes="92vw"
-            className="h-auto max-h-[90vh] w-auto max-w-[92vw] rounded-xl object-contain"
+            sizes="90vw"
+            className="max-h-[88vh] max-w-[92vw] object-contain select-none"
             priority
             draggable={false}
           />
+          {hasMany ? (
+            <>
+              <div className="absolute inset-y-0 left-3 flex items-center sm:left-5">
+                <CarouselArrow
+                  direction="prev"
+                  onClick={() => step(-1)}
+                  disabled={zoom === 0}
+                  label={`${projectName} 이전 스크린샷`}
+                />
+              </div>
+              <div className="absolute inset-y-0 right-3 flex items-center sm:right-5">
+                <CarouselArrow
+                  direction="next"
+                  onClick={() => step(1)}
+                  disabled={zoom === shots.length - 1}
+                  label={`${projectName} 다음 스크린샷`}
+                />
+              </div>
+              <div className="absolute inset-x-0 bottom-4 text-center text-sm font-medium text-white/90">
+                {zoom + 1} / {shots.length}
+              </div>
+            </>
+          ) : null}
         </div>
       ) : null}
     </dialog>

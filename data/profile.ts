@@ -198,12 +198,6 @@ export const profile = {
           width: 2880,
           height: 1800,
         },
-        {
-          src: "/projects/repairon/7_customer.png",
-          alt: "RepairFlow 고객용 수선 진행 조회 — 소요시간·수선 내역·합계와 접수부터 완료까지 진행 타임라인",
-          width: 1200,
-          height: 5664,
-        },
       ],
       links: [],
     },
